@@ -1,0 +1,77 @@
+
+a) Give me FH and TO per aircraft (also per model) per day (also per month and per year). 
+b) Give me ADIS, ADOS, ADOSS, ADOSU, DYR, CNR, TDR, ADD per aircraft (also per model) 
+per month (also per year).  
+c) Give me the RRh, RRc, PRRh, PRRc, MRRh and MRRc per aircraft (also per model and 
+manufacturer) per month (also per year). 
+d) Give me the MRRh and MRRc per airport of the reporting person per aircraft (also per 
+model). 
+
+
+
+
+
+1. Flight hours per model, per aircraft, per day, month and year
+
+SELECT distinct model , regNr , sum(airTime) as flighthours, count (takeOffs)
+FROM Aircraft as a, AircraftUtilization as au, Time as t
+WHERE au.ID=a.ID and au.ID=t.ID
+GROUP BY a.model, a.regNr
+
+2. ADIS: cumulative days when aircraft was on use
+
+SELECT a.ID, count(inFlight)
+FROM AircraftUtilization au, Aircraft as a
+WHERE au.ID=a.ID
+GROUP BY a.ID
+
+3. ADOS : days when the aircraft was under maintenance
+
+SELECT au.ID, (sum(offScheduled)+sum(offUnScheduled)) as ADOS
+FROM AircraftUtilization au, Maintenance as m
+WHERE au.ID=m.ID
+GROUP BY au.ID
+
+4. ADOSS
+
+SELECT au.ID , sum(offScheduled) as ADOSS
+FROM AircraftUtilization au, Maintenance as m
+WHERE au.ID=m.ID AND m.Scheduled=True 
+GROUP BY au.ID
+
+5. ADOSU
+
+SELECT au.ID , sum(offUnScheduled) as ADOSS
+FROM AircraftUtilization au, Maintenance as m
+WHERE au.ID=m.ID AND m.Unscheduled=True 
+GROUP BY au.ID
+
+6.DYR and CNR
+
+SELECT au.ID , sum(case when delayed='T' then 1 else 0 end)/count(*)*100
+FROM AircraftUtilization au, Flight f
+WHERE au.ID=f.ID
+GROUP BY au.ID
+
+7.TDR
+
+SELECT f.ID, count(*)/100 as TDR
+FROM Flight f
+WHERE f.delayed='F' AND f.cancelled='F'
+GROUP BY f.ID
+
+8. ADD: average delay duration
+
+SELECT au.ID, avg(delayDuration) as ADD
+FROM AircraftUtilization au, Flight f
+WHERE au.ID=F.ID AND f.cancelled='T' and delayDuration IN [15-360]
+GROUP BY au.ID
+
+
+
+
+
+
+
+
+
